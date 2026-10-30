@@ -10,6 +10,7 @@ setores:
 palavrasChave: [Anvisa, suspensão de distribuidora, boas práticas de distribuição, RDC 430, gestão da qualidade, cadeia fria farmacêutica]
 capaAlt: "Armazém com a porta aberta e um pallet de caixas com paleteira, ao fundo palmeiras e morros"
 capaCredito: "Imagem ilustrativa gerada por IA"
+origem: https://www.linkedin.com/pulse/segunda-feira-8h-o-que-gerente-de-qualidade-responde-quando-anvisa-dnesf/
 rascunho: false
 perguntas:
   - pergunta: O que a Anvisa suspendeu na distribuidora do Distrito Federal?
