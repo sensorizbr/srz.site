@@ -75,6 +75,7 @@ export interface CaseSucesso {
   depoimento?: { texto: string; autor: string };
   foto?: { src: string; alt: string };
   href: string;
+  artigo?: string; // caminho do artigo completo em Conteúdo (opcional)
   autorizado: boolean; // false = fica fora do site até o cliente autorizar
 }
 
@@ -105,16 +106,17 @@ export const CASES_SUCESSO: CaseSucesso[] = [
   },
   {
     id: 'climatizacao-transporte',
-    autorizado: false,
+    autorizado: false, // aguardando autorização do cliente (Juliano), inclusive o depoimento
     segmento: 'Indústria de climatização',
     contexto: 'Transporte de equipamentos',
     destaque: { valor: '100', unidade: '%', rotulo: 'do trajeto com sinal, do Norte ao Sul' },
-    antes: 'Equipamentos chegavam danificados, sem saber onde.',
-    problema: 'Sem prova, não havia responsável nem laudo para o seguro.',
-    como: 'Hubs nos equipamentos, do Norte ao Sul do Brasil, com trecho fluvial e sinal em todo o trajeto.',
-    resultado: 'Impactos localizados no manuseio e no transbordo, com laudo de cada um.',
+    antes: 'Equipamentos chegavam avariados nos trechos mais longos, sem saber onde.',
+    problema: 'Sem prova, a conversa com os parceiros de transporte ficava na suspeita.',
+    como: 'Hubs na carga registram choque e vibração em cada viagem, com trecho fluvial e sinal em todo o trajeto.',
+    resultado: 'Transbordos localizados e plano de ação com os transportadores. O registro virou ferramenta de auditoria.',
     depoimento: { texto: 'Conseguimos comprovar exatamente onde estavam acontecendo os problemas no transporte.', autor: 'Gestor de Qualidade · Indústria Multinacional' },
     href: '/solucoes/ativos-de-alto-valor',
+    artigo: '/conteudo/avaria-no-transporte-causa-raiz-sensores-de-impacto',
   },
   {
     id: 'paes-congelados-frota',

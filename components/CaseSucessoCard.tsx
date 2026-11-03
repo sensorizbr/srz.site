@@ -30,7 +30,12 @@ export default function CaseSucessoCard({ c, semLink }: { c: CaseSucesso; semLin
           <figcaption className="apoio">{c.depoimento.autor}</figcaption>
         </figure>
       )}
-      {!semLink && <p className="case-sucesso__link apoio"><Link href={c.href}>Ver a solução</Link></p>}
+      {!semLink && (
+        <p className="case-sucesso__link apoio">
+          <Link href={c.href}>Ver a solução</Link>
+          {c.artigo && <> · <Link href={c.artigo}>Ler o artigo completo</Link></>}
+        </p>
+      )}
     </article>
   );
 }
