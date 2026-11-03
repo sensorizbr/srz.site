@@ -550,3 +550,23 @@ summary.topo__link::after { content: ''; width: 7px; height: 7px; border-right: 
 .frota__pino--critico .frota__pino-halo, .frota__pino--critico .frota__pino-centro { fill: var(--estado-critico); }
 .frota__item--critico { background: var(--estado-critico-fundo); border-color: var(--estado-critico); }
 .frota__item--critico .frota__temp, .frota__situacao--critico { color: var(--estado-critico); }
+
+/* ---------- Parceiros ---------- */
+.parceiros__acoes { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+.parceiros__destaques { list-style: none; padding: 0; margin: var(--space-4) 0 0; display: grid; gap: var(--space-4); max-width: none; }
+.parceiros__destaques li { display: grid; gap: 4px; align-content: start; padding-top: var(--space-3); border-top: 2px solid var(--borda); }
+.parceiros__destaques li:first-child { border-top-color: var(--acao); }
+.parceiros__destaques strong { font: var(--text-corpo-forte); }
+.parceiros__destaques span { color: var(--tinta-secundaria); }
+@media (min-width: 768px) { .parceiros__destaques { grid-template-columns: repeat(3, 1fr); gap: var(--space-5); } }
+.parceiros__grupo { display: grid; gap: var(--space-4); }
+.parceiros__grupo + .parceiros__grupo { margin-top: var(--space-6); }
+.forma { display: grid; gap: var(--space-2); align-content: start; }
+.parceiros__setores-rotulo { margin: var(--space-6) 0 var(--space-3); }
+@media (min-width: 768px) { .passos--3 { grid-template-columns: repeat(3, 1fr); } }
+.opcoes { border: 0; padding: 0; margin: 0; min-width: 0; }
+.opcoes legend { font: var(--text-corpo-forte); font-size: 15px; padding: 0; margin-bottom: 6px; }
+.opcoes__lista { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.opcoes__lista label { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 44px; padding: 0 14px; border: 1px solid var(--borda); border-radius: var(--radius-pill); background: var(--superficie); font: var(--text-apoio); color: var(--tinta); cursor: pointer; }
+.opcoes__lista input { width: 20px; height: 20px; accent-color: var(--acao); margin: 0; }
+.opcoes__lista label:focus-within { outline: 2px solid var(--foco); outline-offset: 2px; }

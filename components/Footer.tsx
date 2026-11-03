@@ -30,6 +30,7 @@ export default function Footer() {
             <li><Link href="/cases">Cases</Link></li>
             <li><Link href="/conteudo">Conteúdo</Link></li>
             <li><Link href="/empresa">Empresa</Link></li>
+            <li><Link href="/parceiros">Seja parceiro</Link></li>
             <li><a href={SITE.loginCore}>Entrar na Sensoriz CORE</a></li>
             <li><a href={SITE.ouvidoria}>Ouvidoria</a></li>
             <li><Link href="/politicas">Políticas</Link></li>

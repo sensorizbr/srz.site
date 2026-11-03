@@ -23,6 +23,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     ...artigos().map((a) => ({ url: u(`/conteudo/${a.slug}`), lastModified: a.atualizado ?? a.publicado })),
     { url: u('/empresa') },
     { url: u('/diagnostico') },
+    { url: u('/parceiros') },
     { url: u('/politicas'), priority: 0.3 },
     ...politicas().map((p) => ({ url: u(`/politicas/${p.slug}`), priority: 0.3 })),
   ];

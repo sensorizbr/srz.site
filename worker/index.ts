@@ -1,4 +1,4 @@
-// Worker da Cloudflare: serve os arquivos estáticos de out/ e atende /api/diagnostico.
+// Worker da Cloudflare: serve os arquivos estáticos de out/ e atende /api/diagnostico e /api/parceiros.
 // Rota: POST /api/diagnostico — recebe o formulário e o botão de WhatsApp, cria o lead no Notion.
 //
 // Variáveis de ambiente (configurar no painel da Cloudflare, nunca no código):
@@ -9,6 +9,12 @@
 //   Name = empresa · Contato principal = nome e cargo · Email · Phone · Origem = Site
 //   Status = Prospecção · A2 Pontos de monitoramento = pontos · Próxima Ação Comercial = setor e mensagem
 //   (ou, com canal=whatsapp, aviso de que veio pelo botão de WhatsApp). Visão "Leads do site": Origem Site + Prospecção.
+//
+// Rota: POST /api/parceiros — cadastro da página /parceiros. Cria o lead no mesmo Pipeline, com:
+//   Name = empresa · Contato principal = nome e cargo · Email · Phone · Origem = Site · Prioridade = Parceria
+//   Canal de entrada = Formulário do site · Status = Prospecção · Site = site ou LinkedIn
+//   Base legal = Consentimento no formulário (com a data) · Próxima Ação Comercial = tipo, setores, região e mensagem.
+//   Para esconder parceiros da visão "Leads do site", filtre Prioridade diferente de Parceria.
 
 interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> };
@@ -28,12 +34,12 @@ const SETORES: Record<string, string> = {
 const texto = (v: FormDataEntryValue | null, max = 500) => String(v ?? '').trim().slice(0, max);
 const rich = (t: string) => ({ rich_text: t ? [{ text: { content: t } }] : [] });
 
-function responder(request: Request, ok: boolean, status = ok ? 200 : 400) {
+function responder(request: Request, ok: boolean, status = ok ? 200 : 400, caminho = '/diagnostico') {
   if ((request.headers.get('Accept') ?? '').includes('application/json')) {
     return new Response(JSON.stringify({ ok }), { status, headers: { 'Content-Type': 'application/json' } });
   }
   // Sem JavaScript no navegador: volta para a página com o resultado na URL.
-  return Response.redirect(new URL(`/diagnostico?${ok ? 'enviado=1' : 'erro=1'}`, request.url).href, 303);
+  return Response.redirect(new URL(`${caminho}?${ok ? 'enviado=1' : 'erro=1'}`, request.url).href, 303);
 }
 
 // Checagem sem criar lead: abra /api/diagnostico?checar=1 no navegador.
@@ -115,10 +121,91 @@ async function diagnostico(request: Request, env: Env): Promise<Response> {
   return responder(request, true);
 }
 
+// Ids iguais aos de TIPOS_PARCERIA em lib/parcerias.ts.
+const TIPOS: Record<string, string> = {
+  indicacao: 'Indicação',
+  'parceiro-comercial': 'Parceiro comercial',
+  'tecnologia-e-integracao': 'Tecnologia e integração',
+  'servicos-complementares': 'Serviços complementares',
+  'nao-sei': 'Ainda não sei',
+};
+
+async function parceiros(request: Request, env: Env): Promise<Response> {
+  if (request.method !== 'POST') return new Response('Method Not Allowed', { status: 405 });
+  const caminho = '/parceiros';
+  const form = await request.formData();
+
+  // Campo escondido: se veio preenchido, é robô. Responde ok sem gravar nada.
+  if (texto(form.get('site_url'))) return responder(request, true, 200, caminho);
+
+  const nome = texto(form.get('nome'), 120);
+  const cargo = texto(form.get('cargo'), 120);
+  const email = texto(form.get('email'), 200);
+  const telefone = texto(form.get('telefone'), 40);
+  const empresa = texto(form.get('empresa'), 200);
+  const tipo = TIPOS[texto(form.get('tipo'), 60)];
+  const regiao = texto(form.get('regiao'), 200);
+  const setores = form.getAll('setores').map((v) => SETORES[texto(v, 60)]).filter(Boolean);
+  let portfolio = texto(form.get('portfolio'), 300);
+  if (portfolio && !/^https?:\/\//i.test(portfolio)) portfolio = portfolio.includes('.') ? `https://${portfolio}` : '';
+  const mensagem = texto(form.get('mensagem'), 1200);
+  const consentimento = form.get('consentimento');
+
+  if (!nome || !telefone || !empresa || !tipo || !regiao || !consentimento || !email.includes('@')) {
+    return responder(request, false, 400, caminho);
+  }
+  if (!env.NOTION_TOKEN) {
+    console.error('NOTION_TOKEN não configurado');
+    return responder(request, false, 500, caminho);
+  }
+
+  const hoje = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo' }).format(new Date()); // AAAA-MM-DD
+  const proximaAcao = [
+    `Parceria: ${tipo}.`,
+    `Setores: ${setores.length ? setores.join(', ') : 'não informado'}.`,
+    `Região: ${regiao}.`,
+    mensagem ? `Mensagem: ${mensagem}` : '',
+    'Avaliar o perfil e retornar.',
+  ].filter(Boolean).join(' ').slice(0, 1990);
+
+  const resposta = await fetch('https://api.notion.com/v1/pages', {
+    method: 'POST',
+    headers: {
+      Authorization: `Bearer ${env.NOTION_TOKEN}`,
+      'Notion-Version': '2025-09-03',
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      parent: { type: 'data_source_id', data_source_id: env.NOTION_DATA_SOURCE_ID || PIPELINE_PADRAO },
+      properties: {
+        Name: { title: [{ text: { content: empresa } }] },
+        'Contato principal': rich(cargo ? `${nome} (${cargo})` : nome),
+        Email: { email },
+        Phone: { phone_number: telefone },
+        Origem: { select: { name: 'Site' } },
+        Prioridade: { select: { name: 'Parceria' } },
+        'Canal de entrada': { select: { name: 'Formulário do site' } },
+        Status: { status: { name: 'Prospecção' } },
+        ...(portfolio ? { Site: { url: portfolio } } : {}),
+        'Base legal': { select: { name: 'Consentimento no formulário' } },
+        'Data da base legal': { date: { start: hoje } },
+        'Próxima Ação Comercial': rich(proximaAcao),
+      },
+    }),
+  });
+
+  if (!resposta.ok) {
+    console.error('Erro ao criar parceiro no Notion', resposta.status, await resposta.text());
+    return responder(request, false, 502, caminho);
+  }
+  return responder(request, true, 200, caminho);
+}
+
 export default {
   async fetch(request: Request, env: Env): Promise<Response> {
     const url = new URL(request.url);
     if (url.pathname === '/api/diagnostico') return diagnostico(request, env);
+    if (url.pathname === '/api/parceiros') return parceiros(request, env);
     return env.ASSETS.fetch(request);
   },
 };
