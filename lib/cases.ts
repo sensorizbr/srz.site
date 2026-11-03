@@ -106,7 +106,7 @@ export const CASES_SUCESSO: CaseSucesso[] = [
   },
   {
     id: 'climatizacao-transporte',
-    autorizado: false, // aguardando autorização do cliente (Juliano), inclusive o depoimento
+    autorizado: true, // no ar por decisão da Nicole (03/11); autorização do Juliano ainda a enviar
     segmento: 'Indústria de climatização',
     contexto: 'Transporte de equipamentos',
     destaque: { valor: '100', unidade: '%', rotulo: 'do trajeto com sinal, do Norte ao Sul' },
@@ -114,7 +114,7 @@ export const CASES_SUCESSO: CaseSucesso[] = [
     problema: 'Sem prova, a conversa com os parceiros de transporte ficava na suspeita.',
     como: 'Hubs na carga registram choque e vibração em cada viagem, com trecho fluvial e sinal em todo o trajeto.',
     resultado: 'Transbordos localizados e plano de ação com os transportadores. O registro virou ferramenta de auditoria.',
-    depoimento: { texto: 'Conseguimos comprovar exatamente onde estavam acontecendo os problemas no transporte.', autor: 'Gestor de Qualidade · Indústria Multinacional' },
+    // Depoimento guardado até o Juliano aprovar: { texto: 'Conseguimos comprovar exatamente onde estavam acontecendo os problemas no transporte.', autor: 'Gestor de Qualidade · Indústria Multinacional' }
     href: '/solucoes/ativos-de-alto-valor',
     artigo: '/conteudo/avaria-no-transporte-causa-raiz-sensores-de-impacto',
   },
