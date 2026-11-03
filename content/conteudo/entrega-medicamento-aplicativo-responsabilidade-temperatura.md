@@ -1,5 +1,5 @@
 ---
-titulo: Entrega de medicamento por aplicativo: quem responde pela temperatura?
+titulo: "Entrega de medicamento por aplicativo: quem responde pela temperatura?"
 descricao: Pela RDC 44/2009, a farmácia responde pela temperatura do medicamento até o cliente, mesmo com entregador terceirizado. Veja o que muda e como provar.
 publicado: 2026-10-30
 autor: Equipe Sensoriz
