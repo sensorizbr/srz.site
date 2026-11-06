@@ -10,7 +10,7 @@ palavrasChave: [armazém de terceiros, interdição Anvisa, RDC 430, armazenagem
 origem: "https://www.linkedin.com/pulse/se-o-armaz%C3%A9m-que-guarda-seu-estoque-interditado-amanh%C3%A3-voc%C3%AA-consegue-5htnf/"
 capaAlt: "Doca de armazém com a porta aberta, um pallet de caixas lacradas no chão e um caminhão baú vazio parado do lado de fora"
 capaCredito: "Imagem ilustrativa gerada por IA"
-rascunho: true
+rascunho: false
 perguntas:
   - pergunta: O que a Anvisa interditou no terminal do Porto de Santos?
     resposta: A Resolução-RE 4.282/2026 suspendeu o recebimento e a armazenagem de medicamentos, insumos farmacêuticos, dispositivos médicos, matérias-primas sensíveis à temperatura e produtos de controle especial. A interdição é parcial e vale até a correção das irregularidades.
