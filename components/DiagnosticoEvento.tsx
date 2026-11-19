@@ -22,7 +22,7 @@ const ETAPAS = [
 
 const numero = (v: number) => new Intl.NumberFormat('pt-BR').format(v);
 
-function Selecao({ id, rotulo, valor, opcoes, aoMudar }: { id: keyof Respostas; rotulo: string; valor: string; opcoes: Opcao[]; aoMudar: (id: keyof Respostas, v: string) => void }) {
+function Selecao({ id, rotulo, valor, opcoes, aoMudar, ajuda }: { id: keyof Respostas; rotulo: string; valor: string; opcoes: Opcao[]; aoMudar: (id: keyof Respostas, v: string) => void; ajuda?: string }) {
   return (
     <div className="campo">
       <label htmlFor={id}>{rotulo}</label>
@@ -30,6 +30,7 @@ function Selecao({ id, rotulo, valor, opcoes, aoMudar }: { id: keyof Respostas; 
         <option value="">Selecione</option>
         {opcoes.map((o) => <option key={o.id} value={o.id}>{o.rotulo}</option>)}
       </select>
+      {ajuda && <p className="ajuda">{ajuda}</p>}
     </div>
   );
 }
@@ -125,7 +126,7 @@ export default function DiagnosticoEvento({ evento }: { evento: Evento }) {
               </div>
               <Selecao id="afericoes" rotulo="Quantas vezes por dia a temperatura é aferida e registrada" valor={r.afericoes} opcoes={AFERICOES} aoMudar={muda} />
               <Selecao id="minutosRodada" rotulo="Tempo de cada rodada, por pessoa, com registro e conferência" valor={r.minutosRodada} opcoes={MINUTOS_RODADA} aoMudar={muda} />
-              <Selecao id="custoHora" rotulo="Custo médio da hora dessa equipe" valor={r.custoHora} opcoes={CUSTOS_HORA} aoMudar={muda} />
+              <Selecao id="custoHora" rotulo="Perfil da equipe que faz a aferição" valor={r.custoHora} opcoes={CUSTOS_HORA} aoMudar={muda} ajuda="Custo total da hora: salário mais encargos e benefícios. Os valores são aproximados." />
             </>)}
             {etapa === 3 && (
               <fieldset className="evento__radios">
@@ -169,7 +170,7 @@ export default function DiagnosticoEvento({ evento }: { evento: Evento }) {
               <div><dt>Registro manual da equipe</dt><dd className="dado"><span className="evento__moeda">R$</span> {numero(resultado.fatorA)}</dd></div>
               <div><dt>Lotes ou cargas perdidos</dt><dd className="dado"><span className="evento__moeda">R$</span> {numero(resultado.fatorB)}</dd></div>
             </dl>
-            <p className="apoio">Estimativa com os dados que você informou e valores de referência para o custo da hora e {DIAS_MES} dias trabalhados por mês. Os valores são arredondados para R$ 1.000.</p>
+            <p className="apoio">Estimativa preliminar, com os dados que você informou e valores de referência para o custo da hora e {DIAS_MES} dias trabalhados por mês. Na conversa com o nosso time, ela é refinada com a sua operação, o risco regulatório e o ganho real da Sensoriz. Valores arredondados para R$ 1.000.</p>
           </section>
 
           <section className="card evento__bloqueado" aria-labelledby="evento-retorno">

@@ -89,9 +89,9 @@ export const MINUTOS_RODADA: Opcao[] = [
 ];
 
 export const CUSTOS_HORA: Opcao[] = [
-  { id: '30', rotulo: 'R$ 30 por hora', valor: 30 },
-  { id: '45', rotulo: 'R$ 45 por hora', valor: 45 },
-  { id: '70', rotulo: 'R$ 70 por hora', valor: 70 },
+  { id: '30', rotulo: 'Assistente ou técnico: R$ 30 por hora (cerca de R$ 3.700 por mês)', valor: 30 },
+  { id: '45', rotulo: 'Analista pleno ou farmacêutico: R$ 45 por hora (cerca de R$ 5.500 por mês)', valor: 45 },
+  { id: '70', rotulo: 'Coordenador ou responsável técnico sênior: R$ 70 por hora (cerca de R$ 8.600 por mês)', valor: 70 },
 ];
 
 export const PRIORIDADES: Opcao[] = [
