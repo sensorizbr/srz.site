@@ -16,7 +16,7 @@ export const EVENTOS: Evento[] = [
     nome: 'Qualificação Térmica e Cadeia do Frio para Medicamentos',
     organizador: 'Sindusfarma',
     data: '25 de novembro de 2026',
-    agenda: '',
+    agenda: 'https://calendar.app.google/STJBQknxefhe9oUW8',
   },
 ];
 
