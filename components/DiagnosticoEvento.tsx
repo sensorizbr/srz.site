@@ -1,5 +1,5 @@
 'use client';
-// Diagnóstico de evento: 4 etapas curtas (método SPIN) + dados de contato. O custo invisível só aparece depois do envio.
+// Diagnóstico de evento: 4 etapas curtas (método SPIN) + dados de contato. O custo atual estimado só aparece depois do envio.
 // O lead vai para /api/diagnostico (worker/index.ts), que cria o card no Pipeline Sensoriz do Notion.
 // O retorno (ROI) e o prazo de retorno ficam para a reunião, no CORE: aqui eles aparecem borrados, com o botão da agenda.
 import { useEffect, useRef, useState } from 'react';
@@ -17,7 +17,7 @@ const ETAPAS = [
   { titulo: 'O que acontece hoje', texto: 'Como a temperatura é registrada e o que já saiu da faixa.' },
   { titulo: 'O que isso custa', texto: 'Perdas e horas da equipe nos últimos 12 meses.' },
   { titulo: 'O que você quer resolver', texto: 'Escolha a prioridade que mais pesa na sua operação.' },
-  { titulo: 'Seus dados', texto: 'Preencha para ver o custo anual da sua operação.' },
+  { titulo: 'Seus dados', texto: 'Preencha para ver o custo atual estimado da sua operação.' },
 ];
 
 const numero = (v: number) => new Intl.NumberFormat('pt-BR').format(v);
@@ -121,7 +121,7 @@ export default function DiagnosticoEvento({ evento }: { evento: Evento }) {
               <Selecao id="valorLote" rotulo="Valor médio de um lote ou carga" valor={r.valorLote} opcoes={VALORES_LOTE} aoMudar={muda} />
               <div className="campo">
                 <label htmlFor="pessoas">Pessoas que fazem a aferição manual</label>
-                <input id="pessoas" name="pessoas" type="number" inputMode="numeric" min={0} max={200} value={r.pessoas} onChange={(e) => muda('pessoas', e.target.value)} required />
+                <input id="pessoas" name="pessoas" type="number" inputMode="numeric" min={0} max={50} value={r.pessoas} onChange={(e) => muda('pessoas', e.target.value)} required />
               </div>
               <Selecao id="afericoes" rotulo="Quantas vezes por dia a temperatura é aferida e registrada" valor={r.afericoes} opcoes={AFERICOES} aoMudar={muda} />
               <Selecao id="minutosRodada" rotulo="Tempo de cada rodada, por pessoa, com registro e conferência" valor={r.minutosRodada} opcoes={MINUTOS_RODADA} aoMudar={muda} />
@@ -154,7 +154,7 @@ export default function DiagnosticoEvento({ evento }: { evento: Evento }) {
 
           <div className="evento__acoes">
             {etapa > 0 && <button type="button" className="botao botao--secundario" onClick={() => setEtapa(etapa - 1)} disabled={enviando}>Voltar</button>}
-            <button type="submit" className="botao botao--primario" disabled={!etapaCompleta(r, etapa) || enviando}>{ultima ? 'Ver o custo da minha operação' : 'Continuar'}</button>
+            <button type="submit" className="botao botao--primario" disabled={!etapaCompleta(r, etapa) || enviando}>{ultima ? 'Ver o custo atual da minha operação' : 'Continuar'}</button>
           </div>
           {ultima && <p className="form__retorno" role="status" aria-live="polite">{retorno}</p>}
         </form>
@@ -163,7 +163,7 @@ export default function DiagnosticoEvento({ evento }: { evento: Evento }) {
       {fase === 'resultado' && (
         <div className="evento__resultado">
           <section className="card" aria-labelledby="evento-custo">
-            <p className="rotulo" id="evento-custo">Custo invisível estimado por ano</p>
+            <p className="rotulo" id="evento-custo">Custo atual estimado por ano</p>
             <p className="evento__total dado"><span className="evento__moeda">R$</span> {numero(resultado.total)}</p>
             <dl className="evento__linhas">
               <div><dt>Registro manual da equipe</dt><dd className="dado"><span className="evento__moeda">R$</span> {numero(resultado.fatorA)}</dd></div>

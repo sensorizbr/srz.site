@@ -10,7 +10,7 @@
 //   Status = Prospecção · A2 Pontos de monitoramento = pontos · Próxima Ação Comercial = setor e mensagem
 //   (ou, com canal=whatsapp, aviso de que veio pelo botão de WhatsApp). Visão "Leads do site": Origem Site + Prospecção.
 //   Páginas de evento (/evento/<slug>): vêm com o campo "evento". Origem = Evento e a Próxima Ação Comercial leva
-//   a abertura sugerida, o custo invisível estimado e as respostas do diagnóstico.
+//   a abertura sugerida, o custo atual estimado e as respostas do diagnóstico.
 
 interface Env {
   ASSETS: { fetch(request: Request): Promise<Response> };
@@ -75,7 +75,7 @@ async function diagnostico(request: Request, env: Env): Promise<Response> {
   const consentimento = form.get('consentimento');
   // Botão flutuante de WhatsApp: cadastro rápido (nome, empresa e WhatsApp), sem e-mail.
   const viaWhatsapp = texto(form.get('canal'), 20) === 'whatsapp';
-  // Página de evento: diagnóstico SPIN com o custo invisível estimado
+  // Página de evento: diagnóstico SPIN com o custo atual estimado
   const evento = texto(form.get('evento'), 200);
   const reais = (campo: string) => Math.max(0, Math.round(Number(texto(form.get(campo), 15)) || 0)).toLocaleString('pt-BR');
 
@@ -86,7 +86,7 @@ async function diagnostico(request: Request, env: Env): Promise<Response> {
     ? [
         `Lead do evento ${evento}. Ligar em até 1 dia útil e marcar a reunião com a calculadora de ROI do CORE.`,
         `Abertura sugerida: ${texto(form.get('abertura'), 400)}`,
-        `Custo invisível estimado: R$ ${reais('custo_invisivel')} por ano (registro manual R$ ${reais('custo_manual')}; lotes ou cargas perdidos R$ ${reais('custo_perdas')}).`,
+        `Custo atual estimado: R$ ${reais('custo_invisivel')} por ano (registro manual R$ ${reais('custo_manual')}; lotes ou cargas perdidos R$ ${reais('custo_perdas')}).`,
         `Respostas: ${texto(form.get('resumo'), 900)}`,
         texto(form.get('origem_acesso'), 200) ? `Acesso: ${texto(form.get('origem_acesso'), 200)}` : '',
       ].filter(Boolean).join(' ').slice(0, 1900)

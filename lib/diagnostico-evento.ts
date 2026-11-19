@@ -61,8 +61,7 @@ export const PERDAS: Opcao[] = [
   { id: '0', rotulo: 'Nenhum', valor: 0 },
   { id: '1', rotulo: '1', valor: 1 },
   { id: '2', rotulo: '2', valor: 2 },
-  { id: '3-5', rotulo: '3 a 5', valor: 4 },
-  { id: '6+', rotulo: '6 ou mais', valor: 8 },
+  { id: '3+', rotulo: '3 ou mais', valor: 3 },
 ];
 
 export const VALORES_LOTE: Opcao[] = [
@@ -90,9 +89,9 @@ export const MINUTOS_RODADA: Opcao[] = [
 ];
 
 export const CUSTOS_HORA: Opcao[] = [
-  { id: 'ate-50', rotulo: 'Até R$ 50 por hora', valor: 35 },
-  { id: '50-100', rotulo: 'De R$ 50 a R$ 100 por hora', valor: 75 },
-  { id: '100+', rotulo: 'Acima de R$ 100 por hora', valor: 130 },
+  { id: '30', rotulo: 'R$ 30 por hora', valor: 30 },
+  { id: '45', rotulo: 'R$ 45 por hora', valor: 45 },
+  { id: '70', rotulo: 'R$ 70 por hora', valor: 70 },
 ];
 
 export const PRIORIDADES: Opcao[] = [
@@ -139,8 +138,9 @@ export type Resultado = { fatorA: number; fatorB: number; total: number };
 const mil = (v: number) => Math.round(v / 1000) * 1000;
 
 export function calcular(r: Respostas): Resultado {
-  const pessoas = Math.min(200, Math.max(0, Number(r.pessoas) || 0));
-  const minutos = (acha(AFERICOES, r.afericoes)?.valor ?? 0) * (acha(MINUTOS_RODADA, r.minutosRodada)?.valor ?? 0);
+  const pessoas = Math.min(50, Math.max(0, Number(r.pessoas) || 0));
+  // Limite de 120 min por dia por pessoa (decisão do Rodrigo, conferência da calculadora do CORE)
+  const minutos = Math.min(120, (acha(AFERICOES, r.afericoes)?.valor ?? 0) * (acha(MINUTOS_RODADA, r.minutosRodada)?.valor ?? 0));
   const custoHora = acha(CUSTOS_HORA, r.custoHora)?.valor ?? 0;
   const perdas = acha(PERDAS, r.perdas)?.valor ?? 0;
   const valorLote = acha(VALORES_LOTE, r.valorLote)?.valor ?? 0;
