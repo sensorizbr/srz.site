@@ -1,14 +1,14 @@
 'use client';
-// Diagnóstico de evento: 4 etapas curtas (método SPIN), custo invisível na tela e cadastro do lead.
+// Diagnóstico de evento: 4 etapas curtas (método SPIN) + dados de contato. O custo invisível só aparece depois do envio.
 // O lead vai para /api/diagnostico (worker/index.ts), que cria o card no Pipeline Sensoriz do Notion.
-// O retorno (ROI) e o prazo de retorno ficam para a reunião, no CORE.
+// O retorno (ROI) e o prazo de retorno ficam para a reunião, no CORE: aqui eles aparecem borrados, com o botão da agenda.
 import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { SITE } from '@/lib/site';
 import type { Evento } from '@/lib/eventos';
 import {
-  PERFIS, ESCOPOS, FAIXAS, REGISTROS, EXCURSOES, QUALIFICACOES, PERDAS, VALORES_LOTE, MINUTOS, CUSTOS_HORA, PRIORIDADES,
-  RESPOSTAS_VAZIAS, SETOR_DO_PERFIL, DIAS_MES, etapaCompleta, calcular, resumir, abertura,
+  PERFIS, ESCOPOS, FAIXAS, REGISTROS, EXCURSOES, QUALIFICACOES, PERDAS, VALORES_LOTE, AFERICOES, MINUTOS_RODADA, CUSTOS_HORA, PRIORIDADES,
+  RESPOSTAS_VAZIAS, SETOR_DO_PERFIL, DIAS_MES, TOTAL_ETAPAS, etapaCompleta, calcular, resumir, abertura,
   type Opcao, type Respostas,
 } from '@/lib/diagnostico-evento';
 
@@ -17,6 +17,7 @@ const ETAPAS = [
   { titulo: 'O que acontece hoje', texto: 'Como a temperatura é registrada e o que já saiu da faixa.' },
   { titulo: 'O que isso custa', texto: 'Perdas e horas da equipe nos últimos 12 meses.' },
   { titulo: 'O que você quer resolver', texto: 'Escolha a prioridade que mais pesa na sua operação.' },
+  { titulo: 'Seus dados', texto: 'Preencha para ver o custo anual da sua operação.' },
 ];
 
 const numero = (v: number) => new Intl.NumberFormat('pt-BR').format(v);
@@ -37,7 +38,7 @@ export default function DiagnosticoEvento({ evento }: { evento: Evento }) {
   const topo = useRef<HTMLDivElement>(null);
   const [r, setR] = useState<Respostas>(RESPOSTAS_VAZIAS);
   const [etapa, setEtapa] = useState(0);
-  const [fase, setFase] = useState<'perguntas' | 'resultado' | 'enviado'>('perguntas');
+  const [fase, setFase] = useState<'perguntas' | 'resultado'>('perguntas');
   const [retorno, setRetorno] = useState('');
   const [enviando, setEnviando] = useState(false);
   const [acesso, setAcesso] = useState('');
@@ -54,12 +55,12 @@ export default function DiagnosticoEvento({ evento }: { evento: Evento }) {
   const muda = (campo: keyof Respostas, valor: string) => setR((a) => ({ ...a, [campo]: valor }));
   const resultado = calcular(r);
   const agenda = evento.agenda || SITE.whatsapp;
+  const ultima = etapa === TOTAL_ETAPAS - 1;
 
-  async function enviar(e: React.FormEvent<HTMLFormElement>) {
-    e.preventDefault();
+  async function enviar(form: HTMLFormElement) {
     setEnviando(true);
     setRetorno('Enviando…');
-    const dados = new FormData(e.currentTarget);
+    const dados = new FormData(form);
     dados.set('evento', `${evento.organizador}: ${evento.nome} (${evento.data})`);
     dados.set('setor', SETOR_DO_PERFIL[r.perfil] ?? 'outro');
     dados.set('pontos', r.pontos);
@@ -73,20 +74,27 @@ export default function DiagnosticoEvento({ evento }: { evento: Evento }) {
       const resp = await fetch('/api/diagnostico', { method: 'POST', body: dados, headers: { Accept: 'application/json' } });
       if (!resp.ok) throw new Error();
       setRetorno('');
-      setFase('enviado');
+      setFase('resultado');
     } catch {
-      setRetorno('Não foi possível enviar agora. Confira os campos ou fale pelo WhatsApp.');
+      setRetorno('Não foi possível enviar agora. Tente de novo ou fale pelo WhatsApp.');
     } finally {
       setEnviando(false);
     }
   }
 
+  function aoEnviar(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    if (!etapaCompleta(r, etapa)) return;
+    if (!ultima) setEtapa(etapa + 1);
+    else enviar(e.currentTarget);
+  }
+
   return (
     <div className="evento__bloco" ref={topo} tabIndex={-1}>
       {fase === 'perguntas' && (
-        <form className="card evento__etapa" onSubmit={(e) => { e.preventDefault(); if (!etapaCompleta(r, etapa)) return; if (etapa < ETAPAS.length - 1) setEtapa(etapa + 1); else setFase('resultado'); }}>
-          <p className="rotulo">Etapa {etapa + 1} de {ETAPAS.length}</p>
-          <div className="evento__progresso" role="progressbar" aria-valuemin={1} aria-valuemax={ETAPAS.length} aria-valuenow={etapa + 1} aria-label="Progresso do diagnóstico">
+        <form className="card evento__etapa" method="post" action="/api/diagnostico" onSubmit={aoEnviar}>
+          <p className="rotulo">Etapa {etapa + 1} de {TOTAL_ETAPAS}</p>
+          <div className="evento__progresso" role="progressbar" aria-valuemin={1} aria-valuemax={TOTAL_ETAPAS} aria-valuenow={etapa + 1} aria-label="Progresso do diagnóstico">
             {ETAPAS.map((_, i) => <span key={i} className={i <= etapa ? 'evento__passo evento__passo--feito' : 'evento__passo'} />)}
           </div>
           <h2 className="titulo-secao">{ETAPAS[etapa].titulo}</h2>
@@ -112,10 +120,11 @@ export default function DiagnosticoEvento({ evento }: { evento: Evento }) {
               <Selecao id="perdas" rotulo="Lotes ou cargas perdidos, ou retidos por suspeita, em 12 meses" valor={r.perdas} opcoes={PERDAS} aoMudar={muda} />
               <Selecao id="valorLote" rotulo="Valor médio de um lote ou carga" valor={r.valorLote} opcoes={VALORES_LOTE} aoMudar={muda} />
               <div className="campo">
-                <label htmlFor="pessoas">Pessoas que fazem registro manual</label>
+                <label htmlFor="pessoas">Pessoas que fazem a aferição manual</label>
                 <input id="pessoas" name="pessoas" type="number" inputMode="numeric" min={0} max={200} value={r.pessoas} onChange={(e) => muda('pessoas', e.target.value)} required />
               </div>
-              <Selecao id="minutos" rotulo="Tempo por dia, por pessoa, com registro e conferência" valor={r.minutos} opcoes={MINUTOS} aoMudar={muda} />
+              <Selecao id="afericoes" rotulo="Quantas vezes por dia a temperatura é aferida e registrada" valor={r.afericoes} opcoes={AFERICOES} aoMudar={muda} />
+              <Selecao id="minutosRodada" rotulo="Tempo de cada rodada, por pessoa, com registro e conferência" valor={r.minutosRodada} opcoes={MINUTOS_RODADA} aoMudar={muda} />
               <Selecao id="custoHora" rotulo="Custo médio da hora dessa equipe" valor={r.custoHora} opcoes={CUSTOS_HORA} aoMudar={muda} />
             </>)}
             {etapa === 3 && (
@@ -129,16 +138,29 @@ export default function DiagnosticoEvento({ evento }: { evento: Evento }) {
                 ))}
               </fieldset>
             )}
+            {ultima && (<>
+              <div className="campo"><label htmlFor="nome">Nome</label><input id="nome" name="nome" autoComplete="name" required /></div>
+              <div className="campo"><label htmlFor="cargo">Cargo</label><input id="cargo" name="cargo" autoComplete="organization-title" /></div>
+              <div className="campo"><label htmlFor="empresa">Empresa</label><input id="empresa" name="empresa" autoComplete="organization" required /></div>
+              <div className="campo"><label htmlFor="email">E-mail corporativo</label><input id="email" name="email" type="email" autoComplete="email" required /></div>
+              <div className="campo"><label htmlFor="telefone">Telefone ou WhatsApp</label><input id="telefone" name="telefone" type="tel" autoComplete="tel" required /></div>
+              <div className="armadilha" aria-hidden="true"><label>Não preencha<input type="text" name="site_url" tabIndex={-1} autoComplete="off" /></label></div>
+              <div className="campo campo--consentimento">
+                <input id="consentimento" name="consentimento" type="checkbox" required />
+                <label htmlFor="consentimento">Concordo que a Sensoriz use estes dados para entrar em contato sobre o diagnóstico, conforme a <Link href="/politicas/privacidade">política de privacidade</Link>.</label>
+              </div>
+            </>)}
           </div>
 
           <div className="evento__acoes">
-            {etapa > 0 && <button type="button" className="botao botao--secundario" onClick={() => setEtapa(etapa - 1)}>Voltar</button>}
-            <button type="submit" className="botao botao--primario" disabled={!etapaCompleta(r, etapa)}>{etapa < ETAPAS.length - 1 ? 'Continuar' : 'Ver o custo da minha operação'}</button>
+            {etapa > 0 && <button type="button" className="botao botao--secundario" onClick={() => setEtapa(etapa - 1)} disabled={enviando}>Voltar</button>}
+            <button type="submit" className="botao botao--primario" disabled={!etapaCompleta(r, etapa) || enviando}>{ultima ? 'Ver o custo da minha operação' : 'Continuar'}</button>
           </div>
+          {ultima && <p className="form__retorno" role="status" aria-live="polite">{retorno}</p>}
         </form>
       )}
 
-      {fase !== 'perguntas' && (
+      {fase === 'resultado' && (
         <div className="evento__resultado">
           <section className="card" aria-labelledby="evento-custo">
             <p className="rotulo" id="evento-custo">Custo invisível estimado por ano</p>
@@ -151,42 +173,20 @@ export default function DiagnosticoEvento({ evento }: { evento: Evento }) {
           </section>
 
           <section className="card evento__bloqueado" aria-labelledby="evento-retorno">
-            <span className="chip chip--info">Na conversa</span>
             <h3 className="titulo-secao" id="evento-retorno">Retorno com a Sensoriz</h3>
-            <p>Retorno anual, ROI e prazo de retorno saem na conversa com o nosso time, calculados com os seus dados no Sensoriz CORE. O cálculo inclui o risco de autuação pela Anvisa (RDC 430 e RDC 653).</p>
-          </section>
-
-          {fase === 'resultado' && (
-            <form className="card form" method="post" action="/api/diagnostico" onSubmit={enviar}>
-              <div className="campo campo--largo">
-                <h3 className="titulo-secao">Receba o retorno na conversa</h3>
-                <p className="apoio">Deixe seus dados. O nosso time entra em contato em até um dia útil.</p>
-              </div>
-              <div className="campo"><label htmlFor="nome">Nome</label><input id="nome" name="nome" autoComplete="name" required /></div>
-              <div className="campo"><label htmlFor="cargo">Cargo</label><input id="cargo" name="cargo" autoComplete="organization-title" /></div>
-              <div className="campo"><label htmlFor="empresa">Empresa</label><input id="empresa" name="empresa" autoComplete="organization" required /></div>
-              <div className="campo"><label htmlFor="email">E-mail corporativo</label><input id="email" name="email" type="email" autoComplete="email" required /></div>
-              <div className="campo campo--largo"><label htmlFor="telefone">Telefone ou WhatsApp</label><input id="telefone" name="telefone" type="tel" autoComplete="tel" required /></div>
-              <div className="armadilha" aria-hidden="true"><label>Não preencha<input type="text" name="site_url" tabIndex={-1} autoComplete="off" /></label></div>
-              <div className="campo campo--largo campo--consentimento">
-                <input id="consentimento" name="consentimento" type="checkbox" required />
-                <label htmlFor="consentimento">Concordo que a Sensoriz use estes dados para entrar em contato sobre o diagnóstico, conforme a <Link href="/politicas/privacidade">política de privacidade</Link>.</label>
-              </div>
-              <button className="botao botao--primario" type="submit" disabled={enviando}>Enviar e ver o ROI</button>
-              <p className="form__retorno" role="status" aria-live="polite">{retorno}</p>
-            </form>
-          )}
-
-          {fase === 'enviado' && (
-            <section className="card evento__enviado" aria-live="polite">
-              <h3 className="titulo-secao">Recebemos os seus dados</h3>
-              <p>Escolha um horário para ver o ROI da sua operação com o time técnico da Sensoriz.</p>
-              <div className="evento__acoes">
+            <div className="evento__borrado">
+              <dl className="evento__trio" aria-hidden="true">
+                <div><dt>Retorno anual</dt><dd className="dado">R$ 888.888</dd></div>
+                <div><dt>ROI</dt><dd className="dado">888%</dd></div>
+                <div><dt>Prazo de retorno</dt><dd className="dado">88 meses</dd></div>
+              </dl>
+              <div className="evento__veu">
                 <a className="botao botao--primario" href={agenda} target="_blank" rel="noopener noreferrer">Ver o ROI na conversa</a>
               </div>
-              <p className="apoio">Se preferir, o nosso time entra em contato em até um dia útil.</p>
-            </section>
-          )}
+            </div>
+            <p className="sr-only">Retorno anual, ROI e prazo de retorno estão disponíveis na conversa com o time da Sensoriz.</p>
+            <p className="apoio">Calculamos com os seus dados no Sensoriz CORE, incluindo o risco de autuação pela Anvisa (RDC 430 e RDC 653). O nosso time também entra em contato em até um dia útil.</p>
+          </section>
         </div>
       )}
     </div>

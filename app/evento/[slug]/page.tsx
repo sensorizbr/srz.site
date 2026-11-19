@@ -13,7 +13,7 @@ export async function generateMetadata({ params }: Props) {
   if (!e) return {};
   return metadados({
     titulo: 'Descubra o custo invisível da sua cadeia fria',
-    descricao: 'Responda quatro etapas curtas e veja quanto o registro manual e a perda de lotes custam por ano na sua operação.',
+    descricao: 'Responda cinco etapas curtas e veja quanto o registro manual e a perda de lotes custam por ano na sua operação.',
     caminho: `/evento/${e.slug}`,
     semIndice: true,
   });
@@ -28,7 +28,7 @@ export default async function PaginaEvento({ params }: Props) {
         <div className="diag__texto">
           <p className="rotulo">{e.organizador} · {e.data}</p>
           <h1 className="display-l">Descubra o custo invisível da sua cadeia fria</h1>
-          <p className="lead">Responda quatro etapas curtas. Em dois minutos você vê quanto o registro manual e a perda de lotes custam por ano na sua operação.</p>
+          <p className="lead">Responda cinco etapas curtas, a última com seus dados de contato. Em dois minutos você vê quanto o registro manual e a perda de lotes custam por ano na sua operação.</p>
           <ul className="diag__lista">
             <li>Custo anual estimado, com os seus dados</li>
             <li>Conversa com o time técnico, com o ROI calculado no Sensoriz CORE</li>

@@ -26,6 +26,7 @@ export const ESCOPOS: Opcao[] = [
   { id: 'armazenagem', rotulo: 'Armazenagem' },
   { id: 'transporte', rotulo: 'Transporte' },
   { id: 'ambos', rotulo: 'Armazenagem e transporte' },
+  { id: 'outras', rotulo: 'Outras áreas da operação' },
 ];
 
 export const FAIXAS: Opcao[] = [
@@ -71,12 +72,21 @@ export const VALORES_LOTE: Opcao[] = [
   { id: '500+', rotulo: 'Acima de R$ 500 mil', valor: 750000 },
 ];
 
-export const MINUTOS: Opcao[] = [
-  { id: '0', rotulo: 'Nenhum registro manual', valor: 0 },
-  { id: '15', rotulo: 'Até 15 minutos', valor: 15 },
+// Aferição manual: quantas rodadas por dia e quanto tempo cada rodada leva por pessoa.
+// Minutos por dia, por pessoa = rodadas × minutos por rodada (entra na fórmula do CORE).
+export const AFERICOES: Opcao[] = [
+  { id: '0', rotulo: 'Nenhuma', valor: 0 },
+  { id: '1', rotulo: '1 vez por dia', valor: 1 },
+  { id: '2', rotulo: '2 vezes por dia', valor: 2 },
+  { id: '3', rotulo: '3 vezes por dia', valor: 3 },
+  { id: '4+', rotulo: '4 vezes por dia ou mais', valor: 4 },
+];
+
+export const MINUTOS_RODADA: Opcao[] = [
+  { id: '10', rotulo: 'Até 10 minutos', valor: 10 },
+  { id: '20', rotulo: 'Cerca de 20 minutos', valor: 20 },
   { id: '30', rotulo: 'Cerca de 30 minutos', valor: 30 },
-  { id: '60', rotulo: 'Cerca de 1 hora', valor: 60 },
-  { id: '120', rotulo: '2 horas ou mais', valor: 120 },
+  { id: '60', rotulo: '1 hora ou mais', valor: 60 },
 ];
 
 export const CUSTOS_HORA: Opcao[] = [
@@ -90,19 +100,20 @@ export const PRIORIDADES: Opcao[] = [
   { id: 'tempo', rotulo: 'Liberar a equipe do registro manual' },
   { id: 'inspecao', rotulo: 'Chegar à inspeção com o registro pronto' },
   { id: 'clientes', rotulo: 'Provar a conformidade para clientes e contratantes' },
+  { id: 'todas', rotulo: 'Todas as opções acima' },
 ];
 
 export type Respostas = {
   perfil: string; escopo: string; faixa: string; pontos: string;
   registro: string; excursoes: string; qualificacao: string;
-  perdas: string; valorLote: string; pessoas: string; minutos: string; custoHora: string;
+  perdas: string; valorLote: string; pessoas: string; afericoes: string; minutosRodada: string; custoHora: string;
   prioridade: string;
 };
 
 export const RESPOSTAS_VAZIAS: Respostas = {
   perfil: '', escopo: '', faixa: '', pontos: '',
   registro: '', excursoes: '', qualificacao: '',
-  perdas: '', valorLote: '', pessoas: '2', minutos: '', custoHora: '',
+  perdas: '', valorLote: '', pessoas: '2', afericoes: '', minutosRodada: '', custoHora: '',
   prioridade: '',
 };
 
@@ -110,12 +121,14 @@ export const RESPOSTAS_VAZIAS: Respostas = {
 export const CAMPOS_DA_ETAPA: (keyof Respostas)[][] = [
   ['perfil', 'escopo', 'faixa', 'pontos'],
   ['registro', 'excursoes', 'qualificacao'],
-  ['perdas', 'valorLote', 'pessoas', 'minutos', 'custoHora'],
+  ['perdas', 'valorLote', 'pessoas', 'afericoes', 'minutosRodada', 'custoHora'],
   ['prioridade'],
 ];
 
+// A etapa 5 (dados de contato) é validada pelo próprio formulário
+export const TOTAL_ETAPAS = CAMPOS_DA_ETAPA.length + 1;
 export const etapaCompleta = (r: Respostas, etapa: number) =>
-  CAMPOS_DA_ETAPA[etapa].every((c) => r[c].trim() !== '') && (etapa !== 0 || Number(r.pontos) >= 1);
+  etapa >= CAMPOS_DA_ETAPA.length || CAMPOS_DA_ETAPA[etapa].every((c) => r[c].trim() !== '') && (etapa !== 0 || Number(r.pontos) >= 1);
 
 const acha = (lista: Opcao[], id: string) => lista.find((o) => o.id === id);
 const rotulo = (lista: Opcao[], id: string) => acha(lista, id)?.rotulo ?? '';
@@ -127,7 +140,7 @@ const mil = (v: number) => Math.round(v / 1000) * 1000;
 
 export function calcular(r: Respostas): Resultado {
   const pessoas = Math.min(200, Math.max(0, Number(r.pessoas) || 0));
-  const minutos = acha(MINUTOS, r.minutos)?.valor ?? 0;
+  const minutos = (acha(AFERICOES, r.afericoes)?.valor ?? 0) * (acha(MINUTOS_RODADA, r.minutosRodada)?.valor ?? 0);
   const custoHora = acha(CUSTOS_HORA, r.custoHora)?.valor ?? 0;
   const perdas = acha(PERDAS, r.perdas)?.valor ?? 0;
   const valorLote = acha(VALORES_LOTE, r.valorLote)?.valor ?? 0;
@@ -147,7 +160,7 @@ export function resumir(r: Respostas): string {
     `Última qualificação térmica: ${rotulo(QUALIFICACOES, r.qualificacao)}`,
     `Lotes ou cargas perdidos por ano: ${rotulo(PERDAS, r.perdas)}`,
     `Valor médio do lote: ${rotulo(VALORES_LOTE, r.valorLote)}`,
-    `Equipe no registro manual: ${r.pessoas} pessoas, ${rotulo(MINUTOS, r.minutos).toLowerCase()} por dia, ${rotulo(CUSTOS_HORA, r.custoHora)}`,
+    `Equipe no registro manual: ${r.pessoas} pessoas, ${rotulo(AFERICOES, r.afericoes).toLowerCase()}, ${rotulo(MINUTOS_RODADA, r.minutosRodada).toLowerCase()} por rodada, ${rotulo(CUSTOS_HORA, r.custoHora)}`,
     `Prioridade: ${rotulo(PRIORIDADES, r.prioridade)}`,
   ].join('. ') + '.';
 }
@@ -158,7 +171,10 @@ export function abertura(r: Respostas, res: Resultado): string {
   const risco = r.qualificacao === 'nunca' || r.qualificacao === 'mais-2'
     ? ' Qualificação térmica antiga ou inexistente: abrir pelo risco em inspeção.'
     : '';
-  return `Começar pela prioridade "${rotulo(PRIORIDADES, r.prioridade)}". O maior custo vem ${maior}.${risco}`;
+  const prioridade = r.prioridade === 'todas'
+    ? 'O lead marcou todas as prioridades (perda de lotes, tempo da equipe, inspeção e clientes). Começar pelo maior custo.'
+    : `Começar pela prioridade "${rotulo(PRIORIDADES, r.prioridade)}".`;
+  return `${prioridade} O maior custo vem ${maior}.${risco}`;
 }
 
 export const rotuloDe = { prioridade: (id: string) => rotulo(PRIORIDADES, id) };
