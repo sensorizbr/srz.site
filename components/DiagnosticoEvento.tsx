@@ -21,6 +21,7 @@ const ETAPAS = [
 ];
 
 const numero = (v: number) => new Intl.NumberFormat('pt-BR').format(v);
+const prazo = (m: number | null) => (m === null ? 'a definir' : m < 1 ? 'menos de 1 mês' : `${numero(m)} ${m === 1 ? 'mês' : 'meses'}`);
 
 function Selecao({ id, rotulo, valor, opcoes, aoMudar, ajuda }: { id: keyof Respostas; rotulo: string; valor: string; opcoes: Opcao[]; aoMudar: (id: keyof Respostas, v: string) => void; ajuda?: string }) {
   return (
@@ -57,6 +58,7 @@ export default function DiagnosticoEvento({ evento }: { evento: Evento }) {
   const resultado = calcular(r);
   const agenda = evento.agenda || SITE.whatsapp;
   const ultima = etapa === TOTAL_ETAPAS - 1;
+  const positivo = resultado.retorno > 0 && (resultado.roiAno1 ?? -1) > 0;
 
   async function enviar(form: HTMLFormElement) {
     setEnviando(true);
@@ -68,6 +70,11 @@ export default function DiagnosticoEvento({ evento }: { evento: Evento }) {
     dados.set('custo_invisivel', String(resultado.total));
     dados.set('custo_manual', String(resultado.fatorA));
     dados.set('custo_perdas', String(resultado.fatorB));
+    dados.set('retorno_anual', String(resultado.retorno));
+    dados.set('roi_ano1', resultado.roiAno1 === null ? '' : String(resultado.roiAno1));
+    dados.set('lucro_3anos', String(resultado.lucro3Anos));
+    dados.set('payback_meses', resultado.paybackMeses === null ? '' : String(resultado.paybackMeses));
+    dados.set('investimento_mes', String(resultado.investimentoMes));
     dados.set('resumo', resumir(r));
     dados.set('abertura', abertura(r, resultado));
     dados.set('origem_acesso', acesso);
@@ -121,12 +128,12 @@ export default function DiagnosticoEvento({ evento }: { evento: Evento }) {
               <Selecao id="perdas" rotulo="Lotes ou cargas perdidos, ou retidos por suspeita, em 12 meses" valor={r.perdas} opcoes={PERDAS} aoMudar={muda} />
               <Selecao id="valorLote" rotulo="Valor médio de um lote ou carga" valor={r.valorLote} opcoes={VALORES_LOTE} aoMudar={muda} />
               <div className="campo">
-                <label htmlFor="pessoas">Pessoas que fazem a aferição manual</label>
+                <label htmlFor="pessoas">Quantas pessoas aferem ou fazem a análise dos registros de temperatura?</label>
                 <input id="pessoas" name="pessoas" type="number" inputMode="numeric" min={0} max={50} value={r.pessoas} onChange={(e) => muda('pessoas', e.target.value)} required />
               </div>
               <Selecao id="afericoes" rotulo="Quantas vezes por dia a temperatura é aferida e registrada" valor={r.afericoes} opcoes={AFERICOES} aoMudar={muda} />
               <Selecao id="minutosRodada" rotulo="Tempo de cada rodada, por pessoa, com registro e conferência" valor={r.minutosRodada} opcoes={MINUTOS_RODADA} aoMudar={muda} />
-              <Selecao id="custoHora" rotulo="Perfil da equipe que faz a aferição" valor={r.custoHora} opcoes={CUSTOS_HORA} aoMudar={muda} ajuda="Custo total da hora: salário mais encargos e benefícios. Os valores são aproximados." />
+              <Selecao id="custoHora" rotulo="Perfil da equipe que faz a aferição" valor={r.custoHora} opcoes={CUSTOS_HORA} aoMudar={muda} ajuda="Custo total da hora: salário mais encargos e benefícios. Equivale a salários de cerca de R$ 3.700, R$ 5.500 e R$ 8.600 por mês, respectivamente. Valores aproximados." />
             </>)}
             {etapa === 3 && (
               <fieldset className="evento__radios">
@@ -173,20 +180,21 @@ export default function DiagnosticoEvento({ evento }: { evento: Evento }) {
             <p className="apoio">Estimativa preliminar, com os dados que você informou e valores de referência para o custo da hora e {DIAS_MES} dias trabalhados por mês. Na conversa com o nosso time, ela é refinada com a sua operação, o risco regulatório e o ganho real da Sensoriz. Valores arredondados para R$ 1.000.</p>
           </section>
 
-          <section className="card evento__bloqueado" aria-labelledby="evento-retorno">
-            <h3 className="titulo-secao" id="evento-retorno">Retorno com a Sensoriz</h3>
-            <div className="evento__borrado">
-              <dl className="evento__trio" aria-hidden="true">
-                <div><dt>Retorno anual</dt><dd className="dado">R$ 888.888</dd></div>
-                <div><dt>ROI</dt><dd className="dado">888%</dd></div>
-                <div><dt>Prazo de retorno</dt><dd className="dado">88 meses</dd></div>
+          <section className="card evento__retorno" aria-labelledby="evento-retorno">
+            <h3 className="titulo-secao" id="evento-retorno">Retorno previsto com a Sensoriz</h3>
+            {positivo ? (
+              <dl className="evento__trio">
+                <div><dt>Retorno por ano</dt><dd className="dado"><span className="evento__moeda">R$</span> {numero(resultado.retorno)}</dd></div>
+                <div><dt>ROI no primeiro ano</dt><dd className="dado">{numero(resultado.roiAno1 ?? 0)}%</dd></div>
+                <div><dt>Lucro em 3 anos</dt><dd className="dado"><span className="evento__moeda">R$</span> {numero(resultado.lucro3Anos)}</dd></div>
+                <div><dt>Prazo de retorno</dt><dd className="dado">{prazo(resultado.paybackMeses)}</dd></div>
               </dl>
-              <div className="evento__veu">
-                <a className="botao botao--primario" href={agenda} target="_blank" rel="noopener noreferrer">Ver o ROI na conversa</a>
-              </div>
-            </div>
-            <p className="sr-only">Retorno anual, ROI e prazo de retorno estão disponíveis na conversa com o time da Sensoriz.</p>
-            <p className="apoio">Calculamos com os seus dados no Sensoriz CORE, incluindo o risco de autuação pela Anvisa (RDC 430 e RDC 653). O nosso time também entra em contato em até um dia útil.</p>
+            ) : (
+              <p className="lead">Com os dados informados, o retorno ainda não cobre o investimento. Na conversa, a gente refina o cálculo com a sua operação.</p>
+            )}
+            <p className="apoio">Estimativa preliminar. Considera tags E4BL com calibração RBC e hubs, a cerca de R$ {numero(resultado.investimentoMes)} por mês, e não inclui o risco de autuação da Anvisa. Na conversa, refinamos com a sua operação.</p>
+            <a className="botao botao--primario" href={agenda} target="_blank" rel="noopener noreferrer">Saiba como</a>
+            <p className="apoio">O nosso time também entra em contato em até um dia útil.</p>
           </section>
         </div>
       )}

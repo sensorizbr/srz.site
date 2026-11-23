@@ -87,6 +87,9 @@ async function diagnostico(request: Request, env: Env): Promise<Response> {
         `Lead do evento ${evento}. Ligar em até 1 dia útil e marcar a reunião com a calculadora de ROI do CORE.`,
         `Abertura sugerida: ${texto(form.get('abertura'), 400)}`,
         `Custo atual estimado: R$ ${reais('custo_invisivel')} por ano (registro manual R$ ${reais('custo_manual')}; lotes ou cargas perdidos R$ ${reais('custo_perdas')}).`,
+        texto(form.get('retorno_anual'), 15)
+          ? `Retorno previsto mostrado ao lead: R$ ${reais('retorno_anual')} por ano, ROI no ano 1 de ${texto(form.get('roi_ano1'), 8) || 'n/d'}%, lucro em 3 anos R$ ${reais('lucro_3anos')}, prazo de retorno ${texto(form.get('payback_meses'), 8) || 'n/d'} meses (investimento de referência R$ ${reais('investimento_mes')} por mês).`
+          : '',
         `Respostas: ${texto(form.get('resumo'), 900)}`,
         texto(form.get('origem_acesso'), 200) ? `Acesso: ${texto(form.get('origem_acesso'), 200)}` : '',
       ].filter(Boolean).join(' ').slice(0, 1900)

@@ -575,9 +575,8 @@ summary.topo__link::after { content: ''; width: 7px; height: 7px; border-right: 
 .evento__linhas dt { color: var(--tinta-secundaria); }
 .evento__linhas dd { margin: 0; font-size: 18px; }
 .evento__etapa input[type='checkbox'] { width: 22px; min-height: 22px; height: 22px; padding: 0; margin-top: 2px; accent-color: var(--acao); }
-.evento__bloqueado { display: grid; gap: var(--space-3); background: var(--superficie-sutil); border-style: dashed; }
-.evento__borrado { position: relative; display: grid; min-height: 148px; }
-.evento__trio { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-4); filter: blur(9px); user-select: none; pointer-events: none; }
+.evento__retorno { display: grid; gap: var(--space-3); justify-items: start; }
+.evento__trio { margin: 0; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: var(--space-4); width: 100%; }
 .evento__trio dt { color: var(--tinta-secundaria); }
-.evento__trio dd { margin: 4px 0 0; font-size: 28px; font-weight: 500; }
-.evento__veu { position: absolute; inset: 0; display: grid; place-items: center; padding: var(--space-3); }
+.evento__trio dd { margin: 4px 0 0; font-size: 24px; font-weight: 500; overflow-wrap: anywhere; }
+.evento__trio .evento__moeda { margin-right: 2px; }

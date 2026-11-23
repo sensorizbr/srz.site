@@ -89,9 +89,9 @@ export const MINUTOS_RODADA: Opcao[] = [
 ];
 
 export const CUSTOS_HORA: Opcao[] = [
-  { id: '30', rotulo: 'Assistente ou técnico: R$ 30 por hora (cerca de R$ 3.700 por mês)', valor: 30 },
-  { id: '45', rotulo: 'Analista pleno ou farmacêutico: R$ 45 por hora (cerca de R$ 5.500 por mês)', valor: 45 },
-  { id: '70', rotulo: 'Coordenador ou responsável técnico sênior: R$ 70 por hora (cerca de R$ 8.600 por mês)', valor: 70 },
+  { id: '30', rotulo: 'Assistente ou técnico: R$ 30 por hora', valor: 30 },
+  { id: '45', rotulo: 'Analista pleno ou farmacêutico: R$ 45 por hora', valor: 45 },
+  { id: '70', rotulo: 'Coordenador ou técnico sênior: R$ 70 por hora', valor: 70 },
 ];
 
 export const PRIORIDADES: Opcao[] = [
@@ -132,7 +132,24 @@ export const etapaCompleta = (r: Respostas, etapa: number) =>
 const acha = (lista: Opcao[], id: string) => lista.find((o) => o.id === id);
 const rotulo = (lista: Opcao[], id: string) => acha(lista, id)?.rotulo ?? '';
 
-export type Resultado = { fatorA: number; fatorB: number; total: number };
+export type Resultado = {
+  fatorA: number; fatorB: number; total: number;
+  retorno: number; // retorno anual previsto (85% do fator A + 80% do fator B, como no CORE), arredondado para R$ 1.000
+  investimentoMes: number; // mensalidade estimada de tags e hubs
+  roiAno1: number | null; // %, arredondado para 10 em 10
+  lucro3Anos: number; // R$, arredondado para R$ 1.000
+  paybackMeses: number | null; // meses, uma casa decimal
+};
+
+// Investimento de referência (decisão da Nicole, 23/11/2026): tag E4BL com calibração RBC a R$ 90 por mês por ponto.
+// Hub HGR4 pela assinatura recomendada da tabela comercial (15/09/2026). CONFIRMAR COM O RODRIGO: 1 hub para cada 10 pontos,
+// assinatura mensal do CORE e setup (no CORE de diagnóstico, setup e implantação são abonados no ano 1; aqui ficam fora da conta).
+export const TAG_E4BL_RBC_MES = 90;
+export const HUB_HGR4_MES = 155.41;
+export const PONTOS_POR_HUB = 10;
+// Ganhos como na calculadora do CORE: 85% do tempo da equipe e 80% das perdas de carga. Risco da Anvisa fica de fora.
+export const GANHO_EFICIENCIA = 0.85;
+export const GANHO_CARGA = 0.8;
 
 // Arredonda para R$ 1.000: é uma estimativa, não um valor exato
 const mil = (v: number) => Math.round(v / 1000) * 1000;
@@ -144,9 +161,23 @@ export function calcular(r: Respostas): Resultado {
   const custoHora = acha(CUSTOS_HORA, r.custoHora)?.valor ?? 0;
   const perdas = acha(PERDAS, r.perdas)?.valor ?? 0;
   const valorLote = acha(VALORES_LOTE, r.valorLote)?.valor ?? 0;
-  const fatorA = mil(pessoas * (minutos / 60) * DIAS_MES * custoHora * 12);
-  const fatorB = mil(perdas * valorLote);
-  return { fatorA, fatorB, total: fatorA + fatorB };
+  const brutoA = pessoas * (minutos / 60) * DIAS_MES * custoHora * 12;
+  const brutoB = perdas * valorLote;
+  const fatorA = mil(brutoA);
+  const fatorB = mil(brutoB);
+  const pontos = Math.min(100000, Math.max(1, Math.round(Number(r.pontos) || 1)));
+  const investimentoMes = pontos * TAG_E4BL_RBC_MES + Math.ceil(pontos / PONTOS_POR_HUB) * HUB_HGR4_MES;
+  const investimentoAno = investimentoMes * 12;
+  const retornoBruto = brutoA * GANHO_EFICIENCIA + brutoB * GANHO_CARGA;
+  const roi = investimentoAno > 0 ? ((retornoBruto - investimentoAno) / investimentoAno) * 100 : null;
+  return {
+    fatorA, fatorB, total: fatorA + fatorB,
+    retorno: mil(retornoBruto),
+    investimentoMes: Math.round(investimentoMes),
+    roiAno1: roi === null ? null : Math.round(roi / 10) * 10,
+    lucro3Anos: mil(3 * (retornoBruto - investimentoAno)),
+    paybackMeses: retornoBruto > 0 ? Math.round((investimentoAno / (retornoBruto / 12)) * 10) / 10 : null,
+  };
 }
 
 export function resumir(r: Respostas): string {
