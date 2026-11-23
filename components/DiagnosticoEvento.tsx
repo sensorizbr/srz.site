@@ -8,7 +8,7 @@ import { SITE } from '@/lib/site';
 import type { Evento } from '@/lib/eventos';
 import {
   PERFIS, ESCOPOS, FAIXAS, REGISTROS, EXCURSOES, QUALIFICACOES, PERDAS, VALORES_LOTE, AFERICOES, MINUTOS_RODADA, CUSTOS_HORA, PRIORIDADES,
-  RESPOSTAS_VAZIAS, SETOR_DO_PERFIL, DIAS_MES, TOTAL_ETAPAS, etapaCompleta, calcular, resumir, abertura,
+  RESPOSTAS_VAZIAS, SETOR_DO_PERFIL, DIAS_MES, SETUP_TREINAMENTO, TOTAL_ETAPAS, etapaCompleta, calcular, resumir, abertura,
   type Opcao, type Respostas,
 } from '@/lib/diagnostico-evento';
 
@@ -192,7 +192,7 @@ export default function DiagnosticoEvento({ evento }: { evento: Evento }) {
             ) : (
               <p className="lead">Com os dados informados, o retorno ainda não cobre o investimento. Na conversa, a gente refina o cálculo com a sua operação.</p>
             )}
-            <p className="apoio">Estimativa preliminar. Considera tags E4BL com calibração RBC e hubs, a cerca de R$ {numero(resultado.investimentoMes)} por mês, e não inclui o risco de autuação da Anvisa. Na conversa, refinamos com a sua operação.</p>
+            <p className="apoio">Estimativa preliminar. Considera tags E4BL com calibração RBC e hubs, a cerca de R$ {numero(resultado.investimentoMes)} por mês, mais R$ {numero(SETUP_TREINAMENTO)} de setup e treinamento no primeiro ano, e não inclui o risco de autuação da Anvisa. Na conversa, refinamos com a sua operação.</p>
             <a className="botao botao--primario" href={agenda} target="_blank" rel="noopener noreferrer">Saiba como</a>
             <p className="apoio">O nosso time também entra em contato em até um dia útil.</p>
           </section>

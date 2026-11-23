@@ -142,11 +142,12 @@ export type Resultado = {
 };
 
 // Investimento de referência (decisão da Nicole, 23/11/2026): tag E4BL com calibração RBC a R$ 90 por mês por ponto.
-// Hub HGR4 pela assinatura recomendada da tabela comercial (15/09/2026). CONFIRMAR COM O RODRIGO: 1 hub para cada 10 pontos,
-// assinatura mensal do CORE e setup (no CORE de diagnóstico, setup e implantação são abonados no ano 1; aqui ficam fora da conta).
+// Hub HGR4 pela assinatura recomendada da tabela comercial (15/09/2026). Confirmado pelo Rodrigo (23/11/2026): 1 hub para cada
+// 10 pontos; a assinatura do CORE já está no preço do hardware; setup + treinamento = R$ 7.500, cobrados uma vez, no ano 1.
 export const TAG_E4BL_RBC_MES = 90;
 export const HUB_HGR4_MES = 155.41;
 export const PONTOS_POR_HUB = 10;
+export const SETUP_TREINAMENTO = 7500;
 // Ganhos como na calculadora do CORE: 85% do tempo da equipe e 80% das perdas de carga. Risco da Anvisa fica de fora.
 export const GANHO_EFICIENCIA = 0.85;
 export const GANHO_CARGA = 0.8;
@@ -167,7 +168,7 @@ export function calcular(r: Respostas): Resultado {
   const fatorB = mil(brutoB);
   const pontos = Math.min(100000, Math.max(1, Math.round(Number(r.pontos) || 1)));
   const investimentoMes = pontos * TAG_E4BL_RBC_MES + Math.ceil(pontos / PONTOS_POR_HUB) * HUB_HGR4_MES;
-  const investimentoAno = investimentoMes * 12;
+  const investimentoAno = investimentoMes * 12 + SETUP_TREINAMENTO; // ano 1: mensalidades + setup e treinamento
   const retornoBruto = brutoA * GANHO_EFICIENCIA + brutoB * GANHO_CARGA;
   const roi = investimentoAno > 0 ? ((retornoBruto - investimentoAno) / investimentoAno) * 100 : null;
   return {
@@ -175,7 +176,7 @@ export function calcular(r: Respostas): Resultado {
     retorno: mil(retornoBruto),
     investimentoMes: Math.round(investimentoMes),
     roiAno1: roi === null ? null : Math.round(roi / 10) * 10,
-    lucro3Anos: mil(3 * (retornoBruto - investimentoAno)),
+    lucro3Anos: mil(3 * retornoBruto - (3 * investimentoMes * 12 + SETUP_TREINAMENTO)),
     paybackMeses: retornoBruto > 0 ? Math.round((investimentoAno / (retornoBruto / 12)) * 10) / 10 : null,
   };
 }
