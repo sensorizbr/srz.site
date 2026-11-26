@@ -24,5 +24,8 @@
 - [Todos os artigos](https://www.sensoriz.com.br/conteudo)
 - [Feed RSS](https://www.sensoriz.com.br/conteudo/rss.xml)
 
+## Guias
+- [Data logger ou monitoramento em tempo real](https://www.sensoriz.com.br/data-logger): a diferença entre registrar a temperatura (data logger) e monitorar em tempo real com a solução Sensoriz, com tabela comparativa e perguntas frequentes.
+
 ## Contato
 - [Solicitar diagnóstico gratuito](https://www.sensoriz.com.br/diagnostico)

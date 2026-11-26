@@ -580,3 +580,14 @@ summary.topo__link::after { content: ''; width: 7px; height: 7px; border-right: 
 .evento__trio dt { color: var(--tinta-secundaria); }
 .evento__trio dd { margin: 4px 0 0; font-size: 24px; font-weight: 500; overflow-wrap: anywhere; }
 .evento__trio .evento__moeda { margin-right: 2px; }
+
+/* Tabela de comparação (/data-logger): no celular cada critério vira um bloco com as duas colunas empilhadas */
+@media (max-width: 767px) {
+  .tabela-comparacao { min-width: 0; }
+  .tabela-comparacao thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); }
+  .tabela-comparacao tbody, .tabela-comparacao tr, .tabela-comparacao th, .tabela-comparacao td { display: block; }
+  .tabela-comparacao tbody tr { border-top: 1px solid var(--borda-sutil); padding: var(--space-3) 0; }
+  .tabela-comparacao tbody th { border-top: 0; padding: 0 var(--space-4) var(--space-2); }
+  .tabela-comparacao td { border-top: 0; padding: var(--space-1) var(--space-4); }
+  .tabela-comparacao td::before { content: attr(data-label); display: block; font: var(--text-rotulo); letter-spacing: .06em; text-transform: uppercase; color: var(--tinta-suave); }
+}

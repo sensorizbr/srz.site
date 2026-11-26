@@ -180,7 +180,14 @@ export default function PaginaSetor({ s }: { s: Setor }) {
       )}
 
       {/* 6. Perguntas frequentes */}
-      <section className="secao"><div className="container"><Perguntas itens={s.perguntas} /></div></section>
+      <section className="secao">
+        <div className="container">
+          <Perguntas itens={s.perguntas} />
+          {(s.id === 'farmacias-e-clinicas' || s.id === 'logistica-e-cadeia-fria') && (
+            <p className="apoio" style={{ marginTop: 'var(--space-5)' }}>Já usa data logger? <Link href="/data-logger">Veja a diferença para o monitoramento em tempo real</Link>.</p>
+          )}
+        </div>
+      </section>
 
       {relacionados.length > 0 && (
         <section className="secao secao--branca">

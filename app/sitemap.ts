@@ -21,6 +21,7 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: u('/cases') },
     { url: u('/conteudo') },
     ...artigos().map((a) => ({ url: u(`/conteudo/${a.slug}`), lastModified: a.atualizado ?? a.publicado })),
+    { url: u('/data-logger'), priority: 0.7 },
     { url: u('/empresa') },
     { url: u('/diagnostico') },
     { url: u('/politicas'), priority: 0.3 },

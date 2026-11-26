@@ -137,7 +137,14 @@ export default function PaginaProduto({ s }: { s: Produto }) {
           </ul>
         </div>
       </section>
-      <section className="secao secao--branca"><div className="container"><Perguntas itens={s.perguntas} /></div></section>
+      <section className="secao secao--branca">
+        <div className="container">
+          <Perguntas itens={s.perguntas} />
+          {ehDispositivos && (
+            <p className="apoio" style={{ marginTop: 'var(--space-5)' }}>Já usa data logger? <Link href="/data-logger">Veja a diferença para o monitoramento em tempo real</Link>.</p>
+          )}
+        </div>
+      </section>
       <ChamadaDiagnostico />
     </>
   );
